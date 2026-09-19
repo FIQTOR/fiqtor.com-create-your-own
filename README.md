@@ -8,6 +8,8 @@ AI chatbot · Contact form (WhatsApp + Email) · GitHub & WakaTime stats · Cert
 
 </div>
 
+<img src="/img/thumbnail.png" alt="thumbnail.png">
+
 ---
 
 ## 📑 Table of Contents
@@ -38,9 +40,9 @@ AI chatbot · Contact form (WhatsApp + Email) · GitHub & WakaTime stats · Cert
 - 📊 **Live Stats** — GitHub contribution graph and WakaTime coding activity.
 - 🎨 **Modern UI** — Tailwind CSS v4, Framer Motion animations, dark/light theme, 3D & Lottie effects.
 - 🗂️ **Portfolio Sections** — Projects, career timeline, certifications, skills, services.
-- 💰 **Crypto Widget** — Live cryptocurrency prices (LiveCoinWatch).
+- 💰 **Crypto Widget** — Static BTC/ETH/SOL prices served by the backend (no third-party API key to leak).
 - 🔍 **SEO Ready** — Structured data (JSON-LD), OpenGraph, Twitter cards, sitemap, robots.
-- 🌐 **Fully Configurable** — All personal data lives in env vars (no editing components needed).
+- 🌐 **Fully Configurable** — Personal/brand data lives in `frontend/src/config/Identity.ts` (code) and a few `VITE_*` env vars (no editing components needed).
 - 📱 **Responsive** — Mobile-first design with a classic linktree page.
 
 ---
@@ -52,7 +54,7 @@ AI chatbot · Contact form (WhatsApp + Email) · GitHub & WakaTime stats · Cert
 | **Frontend** | React 19, TypeScript, Vite, Tailwind CSS v4, Framer Motion, React Router, react-helmet-async |
 | **Backend**  | Node.js 20, Express, Axios, Nodemailer, Helmet, express-rate-limit                            |
 | **AI**       | `@google/genai` (Gemini), `groq-sdk` (Groq)                                                     |
-| **Services** | WhatsApp Cloud API, Gmail SMTP, GitHub GraphQL, WakaTime, LiveCoinWatch, reCAPTCHA              |
+| **Services** | WhatsApp Cloud API, Gmail SMTP, GitHub GraphQL, WakaTime, reCAPTCHA |
 | **Deploy**   | Vercel (frontend + backend)                                                                     |
 
 ---
@@ -62,10 +64,10 @@ AI chatbot · Contact form (WhatsApp + Email) · GitHub & WakaTime stats · Cert
 ```
 personal-website/
 ├── backend/
-│   ├── config/              # CORS configuration
+│   ├── config/              # CORS + static identity/crypto/social data
 │   ├── controllers/         # AI, Application, Product controllers
 │   ├── middleware/          # rate limiter, logger, error handler
-│   ├── services/            # Contact (WA+Email), GitHub, WakaTime, Stats
+│   ├── services/            # Contact (WA+Email), GitHub, WakaTime, Crypto, Stats
 │   ├── public/              # public routes
 │   ├── index.js             # 🚀 server entry point
 │   ├── routes.js            # all API routes
@@ -79,7 +81,7 @@ personal-website/
     │   # sitemap.xml + robots.txt are GENERATED at build time (not stored here)
     ├── src/
     │   ├── components/      # shared UI components (Navbar, Footer, AIHelper…)
-    │   ├── config/          # ⚙️ Identity, Metadata, Head, AppConfig, integrations
+    │   ├── config/          # ⚙️ Identity.ts (code-based branding), Metadata, Head, integrations
     │   ├── context/         # React contexts (theme, container, welcome)
     │   ├── data/            # 📝 YOUR CONTENT: projects, career, certificates…
     │   ├── layouts/         # layout wrappers
@@ -152,7 +154,7 @@ All configuration is done through environment variables. **Never commit your rea
 - **Backend** → `backend/.env`
 - **Frontend** → `frontend/.env`
 
-> ⚠️ Any variable starting with `VITE_` is embedded into the **public browser bundle**. Never put true secrets (API secrets, private tokens) in a `VITE_` variable.
+> ⚠️ Any variable starting with `VITE_` is embedded into the **public browser bundle**. Never put true secrets (API secrets, private tokens) in a `VITE_` variable. Branding/identity is code-based in `frontend/src/config/Identity.ts`; backend identity/social in `backend/config/identityConfig.js`.
 
 ### Backend Environment Variables (`backend/.env`)
 
@@ -164,14 +166,7 @@ All configuration is done through environment variables. **Never commit your rea
 | **AI**                  |          |                                                                             |
 | `GEMINI_API_KEY`        |    ✅    | Google Gemini key — https://aistudio.google.com/app/apikey                  |
 | `GROQ_API_KEY`          |    ⬜    | Groq key (optional) — https://console.groq.com/keys                        |
-| `AI_BRAND_NAME`         |    ✅    | Brand name used in the AI system prompt                                     |
-| `AI_OWNER_NAME`         |    ✅    | Your full name (AI context)                                                 |
-| `AI_OWNER_ALIAS`        |    ✅    | Your alias (AI context)                                                     |
-| `AI_OWNER_ROLE`         |    ✅    | Your role, e.g. `Software Engineer`                                         |
-| `AI_OWNER_BIO`          |    ⬜    | Short bio for the assistant                                                 |
-| `AI_COMPANY_NAME`       |    ⬜    | Company/business name                                                       |
-| `AI_COMPANY_URL`        |    ⬜    | Company URL                                                                 |
-| **Social (AI routing)** |    ⬜    | `SOCIAL_TIKTOK`, `SOCIAL_INSTAGRAM`, `SOCIAL_YOUTUBE`, `SOCIAL_LINKEDIN`, `SOCIAL_GITHUB`, `SOCIAL_TIKTOK_USERNAME` |
+| **Identity / Social**   |    —     | **Not env** → code in `backend/config/identityConfig.js` (brand, owner, company, social URLs) |
 | **Email / SMTP**        |          |                                                                             |
 | `EMAIL_HOST`            |    ✅    | SMTP host, e.g. `smtp.googlemail.com`                                       |
 | `EMAIL_PORT`            |    ✅    | SMTP port, e.g. `465`                                                       |
@@ -185,40 +180,25 @@ All configuration is done through environment variables. **Never commit your rea
 | `WAKATIME_TIMEOUT_MS`   |    ⬜    | Request timeout in ms (default `8000`)                                      |
 | `WAKATIME_MAX_RETRIES`  |    ⬜    | Retries on transient errors (default `2`)                                   |
 | `WAKATIME_CACHE_TTL_MS` |    ⬜    | Cache TTL in ms (default `300000` = 5 min)                                  |
-| **Behold (IG feed)**    |    ⬜    | `BEHOLD_API_URL` — https://behold.so                                        |
 | **Google Sheets**       |    ⬜    | `GOOGLE_CLIENT_EMAIL`, `GOOGLE_PRIVATE_KEY`, `GOOGLE_SHEET_ID`, `SHEET_SECRET_KEY` |
 | **Security**            |    ✅    | `APP_KEY_HASH` (bcrypt hash)                                                |
 
+> 💡 **AI identity & social URLs are code-based** — `backend/config/identityConfig.js` (not secrets, so kept out of `.env`).
+
+> 💡 **Crypto & social stats are static** — no env vars, no third-party API. Edit `backend/config/cryptoConfig.js` and `backend/config/socialConfig.js` and restart the server.
+
 ### Frontend Environment Variables (`frontend/.env`)
 
-| Variable                      | Required | Description                                                        |
-| ----------------------------- | :------: | ------------------------------------------------------------------ |
-| `VITE_DOMAIN`                 |    ✅    | Primary domain without protocol, e.g. `yourdomain.com`              |
-| `VITE_API_BASE_URL`           |    ✅    | Backend API URL, e.g. `http://localhost:4000/api`                   |
-| **Branding / Owner**          |          |                                                                    |
-| `VITE_BRAND_NAME`             |    ✅    | Brand name, e.g. `FIQTOR`                                          |
-| `VITE_OWNER_NAME`             |    ✅    | Your full name                                                     |
-| `VITE_OWNER_ALIAS`            |    ✅    | Your alias/handle                                                  |
-| `VITE_OWNER_JOB_TITLE`        |    ✅    | Your job title                                                     |
-| `VITE_OWNER_HEADLINE`         |    ✅    | Short tagline (used in metadata)                                   |
-| `VITE_OWNER_YEARS_EXPERIENCE` |    ⬜    | Years of experience (number)                                       |
-| `VITE_OWNER_COUNTRY`          |    ⬜    | Country, e.g. `Indonesia`                                          |
-| `VITE_OWNER_COUNTRY_CODE`     |    ⬜    | ISO code, e.g. `ID`                                                |
-| `VITE_OWNER_LANGUAGES`        |    ⬜    | Comma-separated, e.g. `English,Bahasa Indonesia`                   |
-| `VITE_PORTRAIT_IMAGE`         |    ⬜    | Portrait path in `/public`, e.g. `/icon.webp`                      |
-| **Contact**                   |          |                                                                    |
-| `VITE_CONTACT_EMAIL`          |    ✅    | Public contact email                                               |
-| `VITE_CONTACT_BUSINESS_EMAIL` |    ⬜    | Business email                                                     |
-| `VITE_CONTACT_PHONE`          |    ⬜    | Phone (E.164), e.g. `+6281234567890`                               |
-| `VITE_CONTACT_WHATSAPP`       |    ⬜    | WhatsApp number without `+`, e.g. `6281234567890`                  |
-| `VITE_TWITTER_HANDLE`         |    ⬜    | X/Twitter handle with `@`                                          |
-| **Social**                    |    ⬜    | `VITE_SOCIAL_INSTAGRAM`, `VITE_SOCIAL_TIKTOK`, `VITE_SOCIAL_YOUTUBE`, `VITE_SOCIAL_LINKEDIN`, `VITE_SOCIAL_GITHUB`, `VITE_SOCIAL_THREADS` |
-| **Resume (in `/public/pdf`)** |    ⬜    | `VITE_RESUME_CREATIVE_EN`, `VITE_RESUME_CREATIVE_ID`, `VITE_RESUME_ATS_EN`, `VITE_RESUME_ATS_ID` |
-| **Integrations**              |    ⬜    | `VITE_GITHUB_USERNAME`, `VITE_WAKATIME_USERNAME`, `VITE_INSTAGRAM_USERNAME`, `VITE_INSTAGRAM_USER_ID`, `VITE_INSTAGRAM_ACCESS_TOKEN`, `VITE_TIKTOK_USERNAME`, `VITE_TIKTOK_API_KEY`, `VITE_LIVECOINWATCH_API_KEY` |
-| `VITE_RECAPTCHA_SITE_KEY`     |    ⬜    | reCAPTCHA **site** key — https://www.google.com/recaptcha/admin          |
-| **Company (services)**        |    ⬜    | `VITE_COMPANY_NAME`, `VITE_COMPANY_URL`, `VITE_COMPANY_AI_URL`, `VITE_COMPANY_EDUCATION_URL`, `VITE_COMPANY_MARKETPLACE_URL`, `VITE_COMPANY_TEMPLATES_URL`, `VITE_COMPANY_IMAGE` |
-| `VITE_ENABLE_AI`              |    ⬜    | `TRUE` / `FALSE` to toggle AI features                             |
-| `VITE_GA_MEASUREMENT_ID`      |    ⬜    | Google Analytics ID (e.g. `G-XXXXXXXXXX`); leave empty to disable  |
+Only a few values remain in env — identity/branding moved into code (`frontend/src/config/Identity.ts`).
+
+| Variable                  | Required | Description                                                       |
+| ------------------------- | :------: | ----------------------------------------------------------------- |
+| `VITE_DOMAIN`             |    ⬜    | Optional site-origin override (defaults to `SITE_ORIGIN` in `src/config/Identity.ts`) |
+| `VITE_API_BASE_URL`       |    ✅    | Backend API URL, e.g. `http://localhost:4000/api`                 |
+| `VITE_RECAPTCHA_SITE_KEY` |    ⬜    | reCAPTCHA **site** key — https://www.google.com/recaptcha/admin   |
+| `VITE_ENABLE_AI`          |    ⬜    | `TRUE` / `FALSE` to toggle AI features                            |
+
+> 📌 **Branding, owner identity, contact, social URLs, resume paths, company brand, site origin and GA ID** are code in [`frontend/src/config/Identity.ts`](frontend/src/config/Identity.ts). Integration usernames live in `src/config/{Github,Wakatime,Instagram,Tiktok}.ts`. **No `VITE_*` API keys exist.**
 
 ### Customizing Your Portfolio Content
 
@@ -232,7 +212,7 @@ Beyond env vars, edit these files in `frontend/src/data/` to replace the sample 
 | `skills.ts`        | Skill icons & stack                                         |
 | `services.ts`      | Services offered                                            |
 | `menu.ts`          | Navigation menu items                                       |
-| `social.ts`        | Social links (wired to `Identity.ts` / env)                 |
+| `social.ts`        | Social links (wired to `Identity.ts`)                       |
 | `icons.tsx`        | Custom SVG icon components                                  |
 
 > 📄 **`index.html` `<head>` metadata** (title, meta, OpenGraph, Twitter, JSON-LD, Google Analytics) is **generated at build time** from [`src/config/Head.ts`](frontend/src/config/Head.ts) via the `htmlHeadPlugin` in [`vite.config.ts`](frontend/vite.config.ts). You don't edit `index.html` directly — change the values in `Head.ts` (they read from the same `VITE_*` env vars), and the correct tags are injected automatically for both dev and production builds. This guarantees crawlers that don't run JavaScript still see accurate metadata.
@@ -245,7 +225,7 @@ Also replace the assets in `frontend/public/`:
 - `img/projects/*` — project thumbnails
 - `img/career/*` — company logos
 - `img/certificate/*` — certificate images
-- `pdf/*` — your resume files (update the `VITE_RESUME_*` paths in `.env` to match your file names)
+- `pdf/*` — your resume files (update the paths in `frontend/src/config/Identity.ts` → `RESUME` to match your file names)
 - `icon.webp`, `favicon.ico` — your logo/favicon
 
 > `sitemap.xml` and `robots.txt` are **generated automatically** — do not add them to `public/`.
@@ -306,6 +286,9 @@ All endpoints are served under `/api` (backend base URL).
 | `POST`   | `/api/v1/contact/send`                | Contact form (WhatsApp → Email)      |
 | `GET`    | `/api/v1/github/contributions`        | GitHub contribution stats            |
 | `GET`    | `/api/v1/wakatime`                    | WakaTime coding stats                |
+| `GET`    | `/api/v1/crypto`                      | Static BTC/ETH/SOL prices            |
+| `GET`    | `/api/v1/social/stats`                | Static TikTok/Instagram stats        |
+| `GET`    | `/v1/public/stats`                    | Public social stats (same static data) |
 | `GET`    | `/api/v1/products`                    | List products                        |
 | `GET`    | `/api/v1/product/:row`                | Get a product                        |
 | `POST`   | `/api/v1/product`                     | Create a product                     |
@@ -344,6 +327,7 @@ Both apps are configured for **Vercel** (`vercel.json` included in each folder).
 - ❌ **Never commit `.env`** — real env files are ignored via `.gitignore`. Only `.env.example` is committed.
 - 🔑 **Rotate secrets** if they were ever committed to git. Purge history with [`git filter-repo`](https://github.com/newren/git-filter-repo) or [BFG](https://rtyley.github.io/bfg-repo-cleaner/) and force-push.
 - 🧾 Any `VITE_*` value is **public** (shipped to the browser). Keep secrets server-side only.
+- 🔐 **No third-party API keys ship to the client.** Crypto prices and social stats are served by the backend as static data; integration usernames live in `src/config/*.ts`. If you ever switch to a live provider, proxy it through the backend — never expose the key via `VITE_*`.
 - 🚫 **No secrets, tokens, personal data, or verification files are committed to this repo** — everything sensitive lives in `.env` (gitignored). The only `.env` tracked is `.env.example` (placeholders).
 - 🛡️ The backend uses Helmet, HPP, rate limiting, and CORS — keep these enabled in production.
 - 🔐 Generate `APP_KEY_HASH` securely, e.g.:
