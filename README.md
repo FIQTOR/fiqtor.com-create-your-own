@@ -6,6 +6,8 @@
 
 AI chatbot · Contact form (WhatsApp + Email) · GitHub & WakaTime stats · Certifications · Projects · Career timeline · Multi-language resume
 
+> 📦 **This repo uses Git submodules.** `backend/` and `frontend/` are **separate Git repositories** referenced here as [submodules](#-submodules). See [Submodules](#-submodules) for how to clone and work with them.
+
 </div>
 
 <img src="/img/thumbnail.png" alt="thumbnail.png">
@@ -17,6 +19,7 @@ AI chatbot · Contact form (WhatsApp + Email) · GitHub & WakaTime stats · Cert
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
+- [Submodules](#-submodules)
 - [Prerequisites](#-prerequisites)
 - [Installation](#-installation)
 - [Configuration](#-configuration)
@@ -62,39 +65,106 @@ AI chatbot · Contact form (WhatsApp + Email) · GitHub & WakaTime stats · Cert
 ## 📂 Project Structure
 
 ```
-personal-website/
-├── backend/
-│   ├── config/              # CORS + static identity/crypto/social data
-│   ├── controllers/         # AI, Application, Product controllers
-│   ├── middleware/          # rate limiter, logger, error handler
-│   ├── services/            # Contact (WA+Email), GitHub, WakaTime, Crypto, Stats
-│   ├── public/              # public routes
-│   ├── index.js             # 🚀 server entry point
-│   ├── routes.js            # all API routes
-│   ├── .env.example         # backend env template
+personal-website/               # 📦 umbrella repo (this one — holds only .gitmodules + docs)
+├── .gitmodules                 # defines backend/ and frontend/ as submodules
+├── README.md
+├── AGENTS.md
+│
+├── backend/                    # 🔗 git submodule → FIQTOR/api.fiqtor
+│   ├── config/                 # CORS + static identity/crypto/social data
+│   ├── controllers/            # AI, Application, Product controllers
+│   ├── middleware/             # rate limiter, logger, error handler
+│   ├── services/               # Contact (WA+Email), GitHub, WakaTime, Crypto, Stats
+│   ├── public/                 # public routes
+│   ├── index.js                # 🚀 server entry point
+│   ├── routes.js               # all API routes
+│   ├── .env.example            # backend env template
 │   └── vercel.json
 │
-└── frontend/
-    ├── public/              # static assets (images, pdf, favicon)
-    │   ├── img/             # project/company images
-    │   └── pdf/             # resume files
+└── frontend/                   # 🔗 git submodule → FIQTOR/fiqtor.com
+    ├── public/                 # static assets (images, pdf, favicon)
+    │   ├── img/                # project/company images
+    │   └── pdf/                # resume files
     │   # sitemap.xml + robots.txt are GENERATED at build time (not stored here)
     ├── src/
-    │   ├── components/      # shared UI components (Navbar, Footer, AIHelper…)
-    │   ├── config/          # ⚙️ Identity.ts (code-based branding), Metadata, Head, integrations
-    │   ├── context/         # React contexts (theme, container, welcome)
-    │   ├── data/            # 📝 YOUR CONTENT: projects, career, certificates…
-    │   ├── layouts/         # layout wrappers
-    │   ├── modules/         # feature modules (home, contact, linktree…)
-    │   ├── pages/           # route pages (file-based routing)
-    │   ├── App.tsx          # app shell
-    │   └── main.tsx         # entry point
-    ├── index.html           # minimal shell (head injected at build from src/config/Head.ts)
-    ├── vite.config.ts       # includes htmlHeadPlugin (head + sitemap + robots)
-    └── .env.example         # frontend env template
+    │   ├── components/         # shared UI components (Navbar, Footer, AIHelper…)
+    │   ├── config/             # ⚙️ Identity.ts (code-based branding), Metadata, Head, integrations
+    │   ├── context/            # React contexts (theme, container, welcome)
+    │   ├── data/               # 📝 YOUR CONTENT: projects, career, certificates…
+    │   ├── layouts/            # layout wrappers
+    │   ├── modules/            # feature modules (home, contact, linktree…)
+    │   ├── pages/              # route pages (file-based routing)
+    │   ├── App.tsx             # app shell
+    │   └── main.tsx            # entry point
+    ├── index.html              # minimal shell (head injected at build from src/config/Head.ts)
+    ├── vite.config.ts          # includes htmlHeadPlugin (head + sitemap + robots)
+    └── .env.example            # frontend env template
 ```
 
 > 💡 **Key idea:** Personal/brand data → **env vars** (`.env`). Portfolio content (projects, certificates, career) → **`src/data/*.ts`**. The `<head>` metadata is generated at build time from **`src/config/Head.ts`**.
+>
+> 🔗 **`backend/` and `frontend/` are Git submodules** — each is its own repository with its own history and remotes. This umbrella repo only pins *which commit* of each to use. See [Submodules](#-submodules).
+
+---
+
+## 🔗 Submodules
+
+This repository contains **no application code of its own** — it's an **umbrella (meta) repo** that stitches together two independent repositories via **Git submodules**:
+
+| Submodule    | Repository                              | Purpose                          |
+| ------------ | --------------------------------------- | -------------------------------- |
+| `backend/`   | `https://github.com/FIQTOR/api.fiqtor`  | Node.js + Express API            |
+| `frontend/`  | `https://github.com/FIQTOR/fiqtor.com`  | React 19 + Vite web app          |
+
+The mapping lives in [`.gitmodules`](.gitmodules):
+
+```ini
+[submodule "backend"]
+	path = backend
+	url = https://github.com/FIQTOR/api.fiqtor
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/FIQTOR/fiqtor.com
+```
+
+**What this means in practice:**
+
+- The umbrella repo stores only a **pointer** (commit SHA) to each submodule — not the files themselves.
+- `backend/` and `frontend/` each have their **own** `.git`, remote, branches and history.
+- Committing in the umbrella repo records the **current SHA** of each submodule (a "gitlink").
+- CI/CD and Vercel import each submodule folder as its own project (see [Deployment](#-deployment)).
+
+### Cloning with submodules
+
+```bash
+# Option A — clone everything in one go
+git clone --recurse-submodules https://github.com/FIQTOR/fiqtor.com-create-your-own.git
+cd fiqtor.com-create-your-own
+
+# Option B — already cloned without submodules?
+git submodule update --init --recursive
+```
+
+### Common submodule commands
+
+```bash
+# Check status / pinned commits
+git submodule status
+
+# Pull the latest commit for every submodule
+git submodule update --remote --merge
+
+# Update a single submodule
+git submodule update --remote backend
+
+# Run a git command inside a submodule
+git -C frontend status
+
+# Switch all submodules to the commit the umbrella repo pins
+git submodule update --init --recursive
+```
+
+> ⚠️ **Edits inside a submodule are committed in the submodule's own repo first**, then the umbrella repo commits the new pointer. Pushing the umbrella repo alone does **not** push submodule commits.
 
 ---
 
@@ -110,12 +180,20 @@ Make sure you have installed:
 
 ## 📦 Installation
 
-### 1. Clone the repository
+### 1. Clone the repository **with submodules**
+
+Because `backend/` and `frontend/` are Git submodules, clone recursively (or init them after cloning):
 
 ```bash
-git clone https://github.com/<your-username>/personal-website.git
+# recommended — pulls the umbrella repo + both submodules
+git clone --recurse-submodules https://github.com/<your-username>/personal-website.git
 cd personal-website
+
+# already cloned without them? fetch the submodule commits:
+git submodule update --init --recursive
 ```
+
+> ❓ If `backend/` or `frontend/` are empty after cloning, run `git submodule update --init --recursive`. See [Submodules](#-submodules).
 
 ### 2. Install backend dependencies
 
@@ -306,14 +384,16 @@ All endpoints are served under `/api` (backend base URL).
 
 Both apps are configured for **Vercel** (`vercel.json` included in each folder).
 
+> 🔗 **Submodule note:** `backend/` and `frontend/` are separate Git repos ([submodules](#-submodules)). Deploy each by importing its own repository (or the submodule path) as its own Vercel project — Vercel needs access to that repo, not just the umbrella one.
+
 ### Backend
-1. Import the `backend/` folder as a Vercel project.
+1. Import the `backend/` folder (repo `FIQTOR/api.fiqtor`) as a Vercel project.
 2. Add all backend env vars in **Settings → Environment Variables**.
 3. Set `FRONTEND_HOST` to your production frontend URL (for CORS).
 4. Deploy.
 
 ### Frontend
-1. Import the `frontend/` folder as a Vercel project.
+1. Import the `frontend/` folder (repo `FIQTOR/fiqtor.com`) as a Vercel project.
 2. Add all `VITE_*` env vars in **Settings → Environment Variables**.
 3. Set `VITE_DOMAIN` to your production domain and `VITE_API_BASE_URL` to your deployed backend URL.
 4. Deploy.
@@ -349,6 +429,10 @@ Both apps are configured for **Vercel** (`vercel.json` included in each folder).
 | GitHub/WakaTime stats empty          | Set the relevant tokens/usernames in `backend/.env`.                                    |
 | WakaTime times out (ETIMEDOUT)       | Network/IPv6 issue — the service already retries + caches. Tune via `WAKATIME_TIMEOUT_MS`, `WAKATIME_MAX_RETRIES`, `WAKATIME_CACHE_TTL_MS` in `backend/.env`. |
 | Sitemap/robots show wrong domain     | Set `VITE_DOMAIN` in `frontend/.env` and rebuild — they are generated from it.           |
+| `backend/` / `frontend/` folders empty after clone | They are submodules — run `git submodule update --init --recursive`.        |
+| Submodule shows `-` (uninitialized)   | `git submodule update --init --recursive` (or `git submodule update --remote backend` to pull latest). |
+| Submodule points to old commit        | `git submodule update --remote --merge`, then commit the new pointer in the umbrella repo. |
+| Pushed umbrella repo but `backend` changes missing | Commit & push inside the submodule first (`git -C backend push`), then commit the pointer here. |
 
 ---
 
