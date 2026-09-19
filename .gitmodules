@@ -1,0 +1,6 @@
+[submodule "backend"]
+	path = backend
+	url = https://github.com/FIQTOR/api.fiqtor
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/FIQTOR/fiqtor.com
