@@ -38,7 +38,7 @@ AI chatbot · Contact form (WhatsApp + Email) · GitHub & WakaTime stats · Cert
 
 ## ✨ Features
 
-- 🤖 **AI Assistant** — Context-aware chatbot (Google Gemini / Groq) that answers questions about you.
+- 🤖 **AI Assistant** — Context-aware chatbot (Google Gemini / Groq) that answers questions about you. Supports **voice dictation** (Web Speech API → types straight into the composer), **file attachments** (Image / Video / Document via a type picker, max 4.5MB), streaming replies, and copy/regenerate actions.
 - 📬 **Contact Form** — Sends notifications via WhatsApp Business API with automatic Email (SMTP) fallback.
 - 📊 **Live Stats** — GitHub contribution graph and WakaTime coding activity.
 - 🎨 **Modern UI** — Tailwind CSS v4, Framer Motion animations, dark/light theme, 3D & Lottie effects.
@@ -47,6 +47,7 @@ AI chatbot · Contact form (WhatsApp + Email) · GitHub & WakaTime stats · Cert
 - 🔍 **SEO Ready** — Structured data (JSON-LD), OpenGraph, Twitter cards, sitemap, robots.
 - 🌐 **Fully Configurable** — Personal/brand data lives in `frontend/src/config/Identity.ts` (code) and a few `VITE_*` env vars (no editing components needed).
 - 📱 **Responsive** — Mobile-first design with a classic linktree page.
+- 🧩 **Reusable Template** — Clean, easy-to-navigate structure; a "Portfolio template" link in the footer points to [`fiqtor.com-create-your-own`](https://github.com/FIQTOR/fiqtor.com-create-your-own).
 
 ---
 
@@ -71,13 +72,13 @@ personal-website/               # 📦 umbrella repo (this one — holds only .g
 ├── AGENTS.md
 │
 ├── backend/                    # 🔗 git submodule → FIQTOR/api.fiqtor
-│   ├── config/                 # CORS + static identity/crypto/social data
-│   ├── controllers/            # AI, Application, Product controllers
-│   ├── middleware/             # rate limiter, logger, error handler
-│   ├── services/               # Contact (WA+Email), GitHub, WakaTime, Crypto, Stats
-│   ├── public/                 # public routes
 │   ├── index.js                # 🚀 server entry point
-│   ├── routes.js               # all API routes
+│   ├── src/
+│   │   ├── config/             # CORS + static identity/crypto/social data
+│   │   ├── controllers/        # ai, contact, github, wakatime controllers
+│   │   ├── middleware/         # rate limiter, logger, error handler
+│   │   ├── services/           # contact, github, wakatime, crypto, social services
+│   │   └── routes/             # index (aggregator) + per-feature route files
 │   ├── .env.example            # backend env template
 │   └── vercel.json
 │
@@ -88,11 +89,11 @@ personal-website/               # 📦 umbrella repo (this one — holds only .g
     │   # sitemap.xml + robots.txt are GENERATED at build time (not stored here)
     ├── src/
     │   ├── components/         # shared UI components (Navbar, Footer, AIHelper…)
-    │   ├── config/             # ⚙️ Identity.ts (code-based branding), Metadata, Head, integrations
+    │   ├── config/             # ⚙️ Identity.ts (code-based branding), Head, Metadata, Github/Wakatime
     │   ├── context/            # React contexts (theme, container, welcome)
     │   ├── data/               # 📝 YOUR CONTENT: projects, career, certificates…
     │   ├── layouts/            # layout wrappers
-    │   ├── modules/            # feature modules (home, contact, linktree…)
+    │   ├── modules/            # feature modules — e.g. modules/home/{sections,components}, modules/contact/components
     │   ├── pages/              # route pages (file-based routing)
     │   ├── App.tsx             # app shell
     │   └── main.tsx            # entry point
@@ -232,7 +233,7 @@ All configuration is done through environment variables. **Never commit your rea
 - **Backend** → `backend/.env`
 - **Frontend** → `frontend/.env`
 
-> ⚠️ Any variable starting with `VITE_` is embedded into the **public browser bundle**. Never put true secrets (API secrets, private tokens) in a `VITE_` variable. Branding/identity is code-based in `frontend/src/config/Identity.ts`; backend identity/social in `backend/config/identityConfig.js`.
+> ⚠️ Any variable starting with `VITE_` is embedded into the **public browser bundle**. Never put true secrets (API secrets, private tokens) in a `VITE_` variable. Branding/identity is code-based in `frontend/src/config/Identity.ts`; backend identity/social in `backend/src/config/identity.js`.
 
 ### Backend Environment Variables (`backend/.env`)
 
@@ -244,7 +245,7 @@ All configuration is done through environment variables. **Never commit your rea
 | **AI**                  |          |                                                                             |
 | `GEMINI_API_KEY`        |    ✅    | Google Gemini key — https://aistudio.google.com/app/apikey                  |
 | `GROQ_API_KEY`          |    ⬜    | Groq key (optional) — https://console.groq.com/keys                        |
-| **Identity / Social**   |    —     | **Not env** → code in `backend/config/identityConfig.js` (brand, owner, company, social URLs) |
+| **Identity / Social**   |    —     | **Not env** → code in `backend/src/config/identity.js` (brand, owner, company, social URLs) |
 | **Email / SMTP**        |          |                                                                             |
 | `EMAIL_HOST`            |    ✅    | SMTP host, e.g. `smtp.googlemail.com`                                       |
 | `EMAIL_PORT`            |    ✅    | SMTP port, e.g. `465`                                                       |
@@ -258,12 +259,10 @@ All configuration is done through environment variables. **Never commit your rea
 | `WAKATIME_TIMEOUT_MS`   |    ⬜    | Request timeout in ms (default `8000`)                                      |
 | `WAKATIME_MAX_RETRIES`  |    ⬜    | Retries on transient errors (default `2`)                                   |
 | `WAKATIME_CACHE_TTL_MS` |    ⬜    | Cache TTL in ms (default `300000` = 5 min)                                  |
-| **Google Sheets**       |    ⬜    | `GOOGLE_CLIENT_EMAIL`, `GOOGLE_PRIVATE_KEY`, `GOOGLE_SHEET_ID`, `SHEET_SECRET_KEY` |
-| **Security**            |    ✅    | `APP_KEY_HASH` (bcrypt hash)                                                |
 
-> 💡 **AI identity & social URLs are code-based** — `backend/config/identityConfig.js` (not secrets, so kept out of `.env`).
+> 💡 **AI identity & social URLs are code-based** — `backend/src/config/identity.js` (not secrets, so kept out of `.env`).
 
-> 💡 **Crypto & social stats are static** — no env vars, no third-party API. Edit `backend/config/cryptoConfig.js` and `backend/config/socialConfig.js` and restart the server.
+> 💡 **Crypto & social stats are static** — no env vars, no third-party API. Edit `backend/src/config/crypto.js` and `backend/src/config/social.js` and restart the server.
 
 ### Frontend Environment Variables (`frontend/.env`)
 
@@ -276,7 +275,7 @@ Only a few values remain in env — identity/branding moved into code (`frontend
 | `VITE_RECAPTCHA_SITE_KEY` |    ⬜    | reCAPTCHA **site** key — https://www.google.com/recaptcha/admin   |
 | `VITE_ENABLE_AI`          |    ⬜    | `TRUE` / `FALSE` to toggle AI features                            |
 
-> 📌 **Branding, owner identity, contact, social URLs, resume paths, company brand, site origin and GA ID** are code in [`frontend/src/config/Identity.ts`](frontend/src/config/Identity.ts). Integration usernames live in `src/config/{Github,Wakatime,Instagram,Tiktok}.ts`. **No `VITE_*` API keys exist.**
+> 📌 **Branding, owner identity, contact, social URLs, resume paths, company brand, site origin and GA ID** are code in [`frontend/src/config/Identity.ts`](frontend/src/config/Identity.ts). Integration usernames live in `src/config/Github.ts` and `src/config/Wakatime.ts` (social handles come from `SOCIAL_LINKS` in `Identity.ts`). **No `VITE_*` API keys exist.**
 
 ### Customizing Your Portfolio Content
 
@@ -356,10 +355,11 @@ Open http://localhost:5173 in your browser. 🎉
 
 ## 🔌 API Endpoints
 
-All endpoints are served under `/api` (backend base URL).
+All endpoints are served under `/api` (backend base URL), except `/health` and `/v1/public/*`.
 
 | Method   | Endpoint                              | Description                          |
 | -------- | ------------------------------------- | ------------------------------------ |
+| `GET`    | `/health`                             | Health check (uptime)                |
 | `POST`   | `/api/v1/ai/generate`                 | AI chat completion                   |
 | `POST`   | `/api/v1/contact/send`                | Contact form (WhatsApp → Email)      |
 | `GET`    | `/api/v1/github/contributions`        | GitHub contribution stats            |
@@ -367,16 +367,6 @@ All endpoints are served under `/api` (backend base URL).
 | `GET`    | `/api/v1/crypto`                      | Static BTC/ETH/SOL prices            |
 | `GET`    | `/api/v1/social/stats`                | Static TikTok/Instagram stats        |
 | `GET`    | `/v1/public/stats`                    | Public social stats (same static data) |
-| `GET`    | `/api/v1/products`                    | List products                        |
-| `GET`    | `/api/v1/product/:row`                | Get a product                        |
-| `POST`   | `/api/v1/product`                     | Create a product                     |
-| `POST`   | `/api/v1/product/:row/update`         | Update a product                     |
-| `POST`   | `/api/v1/product/:row/delete`         | Delete a product                     |
-| `POST`   | `/api/v1/s/product`                   | Search products                      |
-| `POST`   | `/api/v1/createentry`                 | Create application entry             |
-| `GET`    | `/api/v1/readentries`                 | Read application entries             |
-| `PUT`    | `/api/v1/updateentry`                 | Update application entry             |
-| `DELETE` | `/api/v1/deleteentry`                 | Delete application entry             |
 
 ---
 
@@ -393,7 +383,7 @@ Both apps are configured for **Vercel** (`vercel.json` included in each folder).
 4. Deploy.
 
 ### Frontend
-1. Import the `frontend/` folder (repo `FIQTOR/fiqtor.com`) as a Vercel project.
+1. Import the `frontend/` folder as a Vercel project.
 2. Add all `VITE_*` env vars in **Settings → Environment Variables**.
 3. Set `VITE_DOMAIN` to your production domain and `VITE_API_BASE_URL` to your deployed backend URL.
 4. Deploy.
@@ -410,10 +400,6 @@ Both apps are configured for **Vercel** (`vercel.json` included in each folder).
 - 🔐 **No third-party API keys ship to the client.** Crypto prices and social stats are served by the backend as static data; integration usernames live in `src/config/*.ts`. If you ever switch to a live provider, proxy it through the backend — never expose the key via `VITE_*`.
 - 🚫 **No secrets, tokens, personal data, or verification files are committed to this repo** — everything sensitive lives in `.env` (gitignored). The only `.env` tracked is `.env.example` (placeholders).
 - 🛡️ The backend uses Helmet, HPP, rate limiting, and CORS — keep these enabled in production.
-- 🔐 Generate `APP_KEY_HASH` securely, e.g.:
-  ```bash
-  node -e "console.log(require('bcrypt').hashSync(require('crypto').randomBytes(24).toString('hex'), 10))"
-  ```
 
 ---
 
@@ -421,7 +407,7 @@ Both apps are configured for **Vercel** (`vercel.json` included in each folder).
 
 | Problem                              | Fix                                                                                     |
 | ------------------------------------ | --------------------------------------------------------------------------------------- |
-| `Cannot find module './controllers/...'` | Ensure all controller files exist in `backend/controllers/`.                          |
+| `Cannot find module './src/...'` | Ensure all controller/service/route files exist under `backend/src/`.            |
 | CORS error in browser                | Set `FRONTEND_HOST` in `backend/.env` to your frontend origin.                          |
 | AI not responding                    | Verify `GEMINI_API_KEY` (backend) and `VITE_API_BASE_URL` (frontend).                   |
 | Contact form fails                   | Check `EMAIL_*` / WhatsApp vars; the backend falls back to email if WhatsApp fails.     |
@@ -429,6 +415,8 @@ Both apps are configured for **Vercel** (`vercel.json` included in each folder).
 | GitHub/WakaTime stats empty          | Set the relevant tokens/usernames in `backend/.env`.                                    |
 | WakaTime times out (ETIMEDOUT)       | Network/IPv6 issue — the service already retries + caches. Tune via `WAKATIME_TIMEOUT_MS`, `WAKATIME_MAX_RETRIES`, `WAKATIME_CACHE_TTL_MS` in `backend/.env`. |
 | Sitemap/robots show wrong domain     | Set `VITE_DOMAIN` in `frontend/.env` and rebuild — they are generated from it.           |
+| Horizontal scroll appears after load | Decorative full-bleed elements overflow the viewport. A global `overflow-x: clip` guard in `frontend/src/index.css` prevents it — avoid `w-screen` / `100vw` (use `w-full`). |
+| Page width shifts / jumps on scroll-lock | `html { scrollbar-gutter: stable }` reserves the scrollbar space so locking scroll (e.g. AI panel open) never changes layout width. |
 | `backend/` / `frontend/` folders empty after clone | They are submodules — run `git submodule update --init --recursive`.        |
 | Submodule shows `-` (uninitialized)   | `git submodule update --init --recursive` (or `git submodule update --remote backend` to pull latest). |
 | Submodule points to old commit        | `git submodule update --remote --merge`, then commit the new pointer in the umbrella repo. |

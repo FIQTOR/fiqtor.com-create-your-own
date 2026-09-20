@@ -44,9 +44,9 @@ Full-stack docs live in `README.md` (root), `backend/README.md`, `frontend/READM
 
 ## ⚡ BACKEND (`backend/`)
 
-- **Tech:** CommonJS (Express 4). Entry: `index.js` -> `routes.js` -> `controllers/` + `services/`.
-- **AI:** Google Gemini (`@google/genai`, `GEMINI_API_KEY`) in `AIController.js`; identity from `AI_*` env vars.
-- **Integrations:** WhatsApp/Meta Cloud API + Email (SMTP) in `services/ContactHandler.js`; GitHub (`services/Github.js`); WakaTime (`services/Wakatime.js`, with timeout/retry/cache).
+- **Tech:** CommonJS (Express 4). Entry: `index.js` -> `src/routes/index.js` -> `src/controllers/` + `src/services/`.
+- **AI:** Google Gemini (`@google/genai`, `GEMINI_API_KEY`) in `src/controllers/ai.controller.js`; identity from `src/config/identity.js`.
+- **Integrations:** WhatsApp/Meta Cloud API + Email (SMTP) in `src/services/contact.service.js`; GitHub (`src/services/github.service.js`); WakaTime (`src/services/wakatime.service.js`, with timeout/retry/cache).
 - **Public Stats:** `/v1/public/stats` (mounted outside `/api`).
 - **Env Sync:** Always sync new env keys to `.env.example`. All secrets come from env — never hardcode.
 
