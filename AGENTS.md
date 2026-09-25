@@ -35,7 +35,9 @@ Full-stack docs live in `README.md` (root), `backend/README.md`, `frontend/READM
   - Shared UI: `src/components/`. Static data: `src/data/`.
   - Every page MUST render `<HelmetContainer page="..." />` (see `src/config/Metadata.ts`).
 - **AI helper:** `src/components/AIHelper.tsx` is a thin orchestrator; logic lives in `src/components/ai/` (hooks `useAIChat`, `useSpeechDictation`, `useFileAttachment` + components `AIMessageList`, `AIComposer`, shared `types.ts`).
-- **Contexts:** `ContainerContext` / `WelcomeContext` live in `src/context/*-context.ts` (separate from their providers for Fast Refresh). Import the context from the `*-context` file, the provider component from `*Provider`.
+- **Contexts:** `ContainerContext` / `WelcomeContext` live in `src/context/*-context.ts` (separate from their providers for Fast Refresh). Import the context from the `*-context` file, the provider component from `*Provider`. `fullPathName` is derived from `useLocation()` inside `ContainerProvider` (single source of truth) — do NOT store route state manually.
+- **Layout tokens:** use the `.page-x` and `.page-base` utility classes (defined in `src/index.css`) for page padding + base text instead of ad-hoc `px-7 md:px-24` etc.
+- **Modals/dialogs:** use `useFocusTrap(active, onClose)` (`src/hooks/useFocusTrap.ts`) for focus trapping, Escape-to-close and focus restore. Icon-only buttons MUST have `aria-label`; live regions use `role="status"` + `aria-live`.
 - **Tests:** Vitest (`npm test`), config in `vitest.config.ts`, setup in `src/test/setup.ts`; test files sit next to source as `*.test.ts(x)`.
 - **Aliases:** `@/*` maps to `src/*` (always use `@/...` imports).
 - **API Base:** `${import.meta.env.VITE_API_BASE_URL}/v1/...` (Base URL ends in `/api`).
