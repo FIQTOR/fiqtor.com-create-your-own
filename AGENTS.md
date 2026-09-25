@@ -34,6 +34,9 @@ Full-stack docs live in `README.md` (root), `backend/README.md`, `frontend/READM
   - `src/pages/` are thin wrappers importing modules from `src/modules/<page>/`.
   - Shared UI: `src/components/`. Static data: `src/data/`.
   - Every page MUST render `<HelmetContainer page="..." />` (see `src/config/Metadata.ts`).
+- **AI helper:** `src/components/AIHelper.tsx` is a thin orchestrator; logic lives in `src/components/ai/` (hooks `useAIChat`, `useSpeechDictation`, `useFileAttachment` + components `AIMessageList`, `AIComposer`, shared `types.ts`).
+- **Contexts:** `ContainerContext` / `WelcomeContext` live in `src/context/*-context.ts` (separate from their providers for Fast Refresh). Import the context from the `*-context` file, the provider component from `*Provider`.
+- **Tests:** Vitest (`npm test`), config in `vitest.config.ts`, setup in `src/test/setup.ts`; test files sit next to source as `*.test.ts(x)`.
 - **Aliases:** `@/*` maps to `src/*` (always use `@/...` imports).
 - **API Base:** `${import.meta.env.VITE_API_BASE_URL}/v1/...` (Base URL ends in `/api`).
 - **Config is env-driven:** all branding/identity/SEO values come from `src/config/Identity.ts` and `src/config/Head.ts` (which read `VITE_*`). Do NOT hardcode personal data or brand strings in components.
@@ -44,10 +47,12 @@ Full-stack docs live in `README.md` (root), `backend/README.md`, `frontend/READM
 
 ## ⚡ BACKEND (`backend/`)
 
-- **Tech:** CommonJS (Express 4). Entry: `index.js` -> `src/routes/index.js` -> `src/controllers/` + `src/services/`.
-- **AI:** Google Gemini (`@google/genai`, `GEMINI_API_KEY`) in `src/controllers/ai.controller.js`; identity from `src/config/identity.js`.
-- **Integrations:** WhatsApp/Meta Cloud API + Email (SMTP) in `src/services/contact.service.js`; GitHub (`src/services/github.service.js`); WakaTime (`src/services/wakatime.service.js`, with timeout/retry/cache).
+- **Tech:** CommonJS (Express 4). `index.js` (bootstrap/`listen`) → `src/app.js` (`createApp()` builds the app, exported for tests) → `src/routes/index.js` → `src/controllers/` + `src/services/`.
+- **AI:** Google Gemini (`@google/genai`, `GEMINI_API_KEY`) in `src/controllers/ai.controller.js`; client is lazy + injectable via `setAiClient()` (test seam); identity from `src/config/identity.js`.
+- **Integrations:** WhatsApp/Meta Cloud API + Email (SMTP) in `src/services/contact.service.js` (exposes `createMessagingService(deps)` for injectable transports); GitHub (`src/services/github.service.js`); WakaTime (`src/services/wakatime.service.js`, with timeout/retry/cache).
 - **Public Stats:** `/v1/public/stats` (mounted outside `/api`).
+- **Rate limiting:** `src/middleware/rate-limiter.js` exports `apiLimiter` (global), `statsLimiter`, `contactLimiter`, `aiLimiter` + `aiDailyLimiter` (daily AI quota).
+- **Tests:** Vitest + supertest (`npm test`), config `vitest.config.mjs`, tests in `tests/*.test.js`.
 - **Env Sync:** Always sync new env keys to `.env.example`. All secrets come from env — never hardcode.
 
 ---

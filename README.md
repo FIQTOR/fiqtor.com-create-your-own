@@ -28,6 +28,7 @@ AI chatbot · Contact form (WhatsApp + Email) · GitHub & WakaTime stats · Cert
   - [Customizing Your Portfolio Content](#customizing-your-portfolio-content)
 - [Running the Project](#-running-the-project)
 - [Available Scripts](#-available-scripts)
+- [Testing & CI](#-testing--ci)
 - [API Endpoints](#-api-endpoints)
 - [Deployment](#-deployment)
 - [Security Notes](#-security-notes)
@@ -343,6 +344,8 @@ Open http://localhost:5173 in your browser. 🎉
 | `npm run build`     | Type-check + build for production          |
 | `npm run preview`   | Preview the production build locally       |
 | `npm run lint`      | Run ESLint                                 |
+| `npm test`          | Run unit tests (Vitest, run once)          |
+| `npm run test:watch` | Run tests in watch mode                   |
 
 ### Backend (`backend/`)
 
@@ -350,6 +353,26 @@ Open http://localhost:5173 in your browser. 🎉
 | --------------- | ------------------------------------ |
 | `npm run dev`   | Start with nodemon (auto-reload)     |
 | `npm start`     | Start the server                     |
+| `npm test`      | Run unit tests (Vitest, run once)    |
+| `npm run test:watch` | Run tests in watch mode         |
+
+---
+
+## 🧪 Testing & CI
+
+Both repos ship with **Vitest** unit tests and a **GitHub Actions** CI workflow.
+
+- **Frontend** (`frontend/`) — `src/**/*.{test,spec}.{ts,tsx}`, jsdom + Testing Library.
+  Covers the Kanban store hook and pure utils.
+- **Backend** (`backend/`) — `tests/**/*.test.js`, Node env + supertest.
+  Covers routes/rate limiting (against `src/app.js`), the AI controller control
+  flow, and the contact service WhatsApp → Email fallback.
+- **CI** — each repo has `.github/workflows/ci.yml`. Frontend runs
+  lint → typecheck → test → build; backend runs install → test. The frontend
+  build injects placeholder `VITE_*` values so the head/sitemap plugin works.
+
+> The Express app is built in `backend/src/app.js` (separate from `index.js`)
+> so tests can exercise it via supertest without binding a port.
 
 ---
 
@@ -400,6 +423,8 @@ Both apps are configured for **Vercel** (`vercel.json` included in each folder).
 - 🔐 **No third-party API keys ship to the client.** Crypto prices and social stats are served by the backend as static data; integration usernames live in `src/config/*.ts`. If you ever switch to a live provider, proxy it through the backend — never expose the key via `VITE_*`.
 - 🚫 **No secrets, tokens, personal data, or verification files are committed to this repo** — everything sensitive lives in `.env` (gitignored). The only `.env` tracked is `.env.example` (placeholders).
 - 🛡️ The backend uses Helmet, HPP, rate limiting, and CORS — keep these enabled in production.
+  - **Per-endpoint limits:** a broad global limiter, a lighter `statsLimiter` for the external-API read endpoints (GitHub/WakaTime), a `contactLimiter` for the form, and an `aiLimiter` **plus** a daily `aiDailyLimiter` quota on `/api/v1/ai/generate` (cost control). Limits live in `backend/src/middleware/rate-limiter.js`.
+- 📧 **Email & DNS security (SPF, DKIM, DMARC, MTA-STS, HSTS, subdomains):** see [`docs/SECURITY-EMAIL-DNS.md`](docs/SECURITY-EMAIL-DNS.md) for the Cloudflare records and rollout steps.
 
 ---
 
