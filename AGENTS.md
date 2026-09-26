@@ -1,10 +1,14 @@
 # AGENTS.md
 
-Personal portfolio (`fiqtor.com`). Two independent git repos under root (NO root git):
+Personal portfolio (`fiqtor.com`). Root repo tracks two submodules:
 
 - `frontend/`: React SPA (Vercel)
 - `backend/`: Express API (Vercel)
-  Scope git commands: `git -C frontend ...` or `git -C backend ...`
+
+Scope git commands per repo: `git -C frontend ...` or `git -C backend ...`.
+Publishing a change therefore has two steps — commit/push inside the submodule,
+then bump the pointer in the root. Use `scripts/push-submodules.sh -m "..."` to
+do both at once (see script header for flags).
 
 Full-stack docs live in `README.md` (root), `backend/README.md`, `frontend/README.md`.
 
