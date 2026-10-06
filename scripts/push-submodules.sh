@@ -130,6 +130,20 @@ for sub in "${SUBMODULES[@]}"; do
   fi
 done
 
+# ---- pre-flight: every bumped submodule commit must exist on its remote ------
+# If the submodule HEAD is not reachable from any remote-tracking ref, pushing
+# the root pointer would publish a gitlink to a commit nobody else can fetch.
+if [[ $pointer_changed -eq 1 ]]; then
+  for sub in "${changed_subs[@]}"; do
+    head="$(git -C "$sub" rev-parse HEAD)"
+    if ! git -C "$sub" branch -r --contains "$head" 2>/dev/null | grep -q .; then
+      echo "error: '$sub' HEAD ($head) is not pushed to any remote." >&2
+      echo "       Push the submodule first, then re-run the root bump." >&2
+      [[ $DRY_RUN -eq 1 ]] || exit 3
+    fi
+  done
+fi
+
 # ---- root: bump the pointer(s) and push -------------------------------------
 echo "==> root"
 if [[ $pointer_changed -eq 0 ]]; then

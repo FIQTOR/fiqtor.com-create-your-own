@@ -57,7 +57,7 @@ AI chatbot · Contact form (WhatsApp + Email) · GitHub & WakaTime stats · Cert
 | Layer      | Technology                                                                                     |
 | ---------- | ---------------------------------------------------------------------------------------------- |
 | **Frontend** | React 19, TypeScript, Vite, Tailwind CSS v4, Framer Motion, React Router, react-helmet-async |
-| **Backend**  | Node.js 20, Express, Axios, Nodemailer, Helmet, express-rate-limit                            |
+| **Backend**  | Node.js 24, Express, Axios, Nodemailer, Helmet, express-rate-limit                          |
 | **AI**       | `@google/genai` (Gemini), `groq-sdk` (Groq)                                                     |
 | **Services** | WhatsApp Cloud API, Gmail SMTP, GitHub GraphQL, WakaTime, reCAPTCHA |
 | **Deploy**   | Vercel (frontend + backend)                                                                     |
@@ -167,6 +167,8 @@ git submodule update --init --recursive
 ```
 
 > ⚠️ **Edits inside a submodule are committed in the submodule's own repo first**, then the umbrella repo commits the new pointer. Pushing the umbrella repo alone does **not** push submodule commits.
+>
+> 💡 **Optional convenience:** run `git config submodule.recurse true` so any `git push` in the umbrella repo also pushes the submodules first (Git 2.14+). The bundled `scripts/push-submodules.sh` does commit → push → bump → push in the correct order and refuses to publish a pointer whose submodule commit isn't on the remote.
 
 ---
 
@@ -174,7 +176,7 @@ git submodule update --init --recursive
 
 Make sure you have installed:
 
-- [Node.js](https://nodejs.org/) **v20.x or higher** (required by backend `engines`)
+- [Node.js](https://nodejs.org/) **v24.x** (matches the backend `engines` field)
 - [npm](https://www.npmjs.com/) (comes with Node) — or `pnpm` / `yarn`
 - [Git](https://git-scm.com/)
 
@@ -260,6 +262,10 @@ All configuration is done through environment variables. **Never commit your rea
 | `WAKATIME_TIMEOUT_MS`   |    ⬜    | Request timeout in ms (default `8000`)                                      |
 | `WAKATIME_MAX_RETRIES`  |    ⬜    | Retries on transient errors (default `2`)                                   |
 | `WAKATIME_CACHE_TTL_MS` |    ⬜    | Cache TTL in ms (default `300000` = 5 min)                                  |
+| `LOG_LEVEL`             |    ⬜    | pino log level (`debug` in dev / `info` in prod by default)                 |
+| `SENTRY_DSN`            |    ⬜    | Sentry DSN for backend error tracking (empty = disabled)                    |
+| `SENTRY_RELEASE`        |    ⬜    | Release tag reported to Sentry (e.g. `api@1.0.0`)                           |
+| `SENTRY_TRACES_SAMPLE_RATE` | ⬜   | Performance-trace sample rate, `0`–`1` (default `0`)                        |
 
 > 💡 **AI identity & social URLs are code-based** — `backend/src/config/identity.js` (not secrets, so kept out of `.env`).
 
@@ -275,6 +281,10 @@ Only a few values remain in env — identity/branding moved into code (`frontend
 | `VITE_API_BASE_URL`       |    ✅    | Backend API URL, e.g. `http://localhost:4000/api`                 |
 | `VITE_RECAPTCHA_SITE_KEY` |    ⬜    | reCAPTCHA **site** key — https://www.google.com/recaptcha/admin   |
 | `VITE_ENABLE_AI`          |    ⬜    | `TRUE` / `FALSE` to toggle AI features                            |
+| `VITE_SENTRY_DSN`         |    ⬜    | Sentry DSN for frontend error tracking (empty = disabled)         |
+| `VITE_SENTRY_ENVIRONMENT` |    ⬜    | Sentry environment label (defaults to Vite `MODE`)                |
+| `VITE_SENTRY_RELEASE`     |    ⬜    | Release tag reported to Sentry (e.g. `web@1.0.0`)                 |
+| `VITE_SENTRY_TRACES_SAMPLE_RATE` | ⬜ | Performance-trace sample rate, `0`–`1` (default `0`)              |
 
 > 📌 **Branding, owner identity, contact, social URLs, resume paths, company brand, site origin and GA ID** are code in [`frontend/src/config/Identity.ts`](frontend/src/config/Identity.ts). Integration usernames live in `src/config/Github.ts` and `src/config/Wakatime.ts` (social handles come from `SOCIAL_LINKS` in `Identity.ts`). **No `VITE_*` API keys exist.**
 
@@ -424,6 +434,8 @@ Both apps are configured for **Vercel** (`vercel.json` included in each folder).
 - 🚫 **No secrets, tokens, personal data, or verification files are committed to this repo** — everything sensitive lives in `.env` (gitignored). The only `.env` tracked is `.env.example` (placeholders).
 - 🛡️ The backend uses Helmet, HPP, rate limiting, and CORS — keep these enabled in production.
   - **Per-endpoint limits:** a broad global limiter, a lighter `statsLimiter` for the external-API read endpoints (GitHub/WakaTime), a `contactLimiter` for the form, and an `aiLimiter` **plus** a daily `aiDailyLimiter` quota on `/api/v1/ai/generate` (cost control). Limits live in `backend/src/middleware/rate-limiter.js`.
+- 🧾 **Structured logging:** the backend logs JSON via [pino](https://getpino.io/) (`backend/src/config/logger.js`); HTTP requests go through `pino-http` with CRLF sanitisation and secret redaction. Tune verbosity with `LOG_LEVEL`.
+- 🚨 **Error tracking:** optional [Sentry](https://sentry.io/) on both backend (`SENTRY_DSN`) and frontend (`VITE_SENTRY_DSN`, `src/config/sentry.ts` + an `ErrorBoundary`). Disabled/no-op when the DSN is empty.
 - 📧 **Email & DNS security (SPF, DKIM, DMARC, MTA-STS, HSTS, subdomains):** see [`docs/SECURITY-EMAIL-DNS.md`](docs/SECURITY-EMAIL-DNS.md) for the Cloudflare records and rollout steps.
 
 ---
