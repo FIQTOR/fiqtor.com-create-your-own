@@ -1,0 +1,33 @@
+# Root repo tracks two submodules (backend/, frontend/). Their own .gitignore
+# files handle everything inside them — do NOT add patterns here that could
+# accidentally hide the submodule paths themselves.
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.swp
+*~
+
+# Logs
+*.log
+logs/
+
+# Environment variables (never commit real secrets).
+# Each submodule keeps its own .env; this is a safety net for stray files
+# dropped at the root during manual testing.
+.env
+.env.*
+!.env.example
+
+# Dependency / build output (safety net — normally lives in the submodules)
+node_modules/
+dist/
+build/
+coverage/
