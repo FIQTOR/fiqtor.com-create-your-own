@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-root-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  submodule-pointers:
+    name: Submodule pointers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The root's only job is to record which submodule commit is published.
+      # Each submodule has its own CI, so a green submodule run says nothing
+      # about whether the root pointer was bumped — a forgotten bump means the
+      # change is live but the root still points at the old commit, and nobody
+      # notices. This checks the gitlinks against the submodule remotes.
+      - name: Verify submodule pointers are current and reachable
+        run: scripts/check-submodule-pointers.sh
