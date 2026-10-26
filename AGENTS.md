@@ -14,6 +14,44 @@ Full-stack docs live in `README.md` (root), `backend/README.md`, `frontend/READM
 
 ---
 
+## 🚨 DEPLOY BRANCH & DUAL-CLONE TRAP (READ FIRST)
+
+**Vercel deploys `frontend/` from branch `master`** — that is the GitHub default
+branch (`git ls-remote --symref origin HEAD` → `refs/heads/master`). If a change
+lands on any other branch (`main`, `v3-pre-merge`, …), production **never** picks
+it up even though the commit is "pushed". Always work and push on **`master`**:
+
+```bash
+git -C frontend checkout master && git -C frontend pull --ff-only origin master
+# ...edit...
+git -C frontend add <files> && git -C frontend commit -m "..."
+git -C frontend push origin master     # ← target master explicitly
+```
+
+**There are two local clones of the SAME remote** (`github.com/FIQTOR/fiqtor.com`):
+
+| Dir | Tracked by root repo? | Usual branch | Notes |
+| :-- | :-- | :-- | :-- |
+| `frontend/` | ✅ submodule (deployed) | **`master`** | The one Vercel builds. Edit & push here. |
+| `frontend-v3/` | ❌ untracked duplicate | `main` | Stray clone. Edits here DO NOT deploy. |
+
+⚠️ Editing `frontend-v3/` and pushing to `main` looks successful but leaves the
+live site stale. Fixes must be applied in **`frontend/` on `master`**. If you
+edited `frontend-v3/src`, mirror the change into `frontend/src` and commit on
+`master` (verify: `diff frontend/src/... frontend-v3/src/...` should be empty).
+
+**Verify deploy after push** (bundle name changes when Vercel rebuilds):
+
+```bash
+curl -s https://fiqtor.com/ | grep -oE "/assets/index-[^\"]+\.js"   # note old hash
+# wait ~1 min for rebuild, then re-check the hash + grep for removed content
+```
+
+`iarty.biz.id` (separate repo `iarty-app/frontend`) has NO such trap — its default
+& deploy branch is already `master`.
+
+---
+
 ## ⛔ EXECUTION & TOKEN SAFETY (STRICT)
 
 1. **No Auto Build/Lint:** NEVER run `npm run build`, `npx tsc`, or `eslint` unless explicitly instructed.
