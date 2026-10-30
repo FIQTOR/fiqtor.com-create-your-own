@@ -302,6 +302,14 @@ Beyond env vars, edit these files in `frontend/src/data/` to replace the sample 
 | `menu.ts`          | Navigation menu items                                       |
 | `social.ts`        | Social links (wired to `Identity.ts`)                       |
 | `icons.tsx`        | Custom SVG icon components                                  |
+| `portrait.ts`      | Interactive dot-matrix portrait data in the hero section    |
+
+> 💡 **Customizing the Hero Dot-Matrix Portrait (`portrait.ts`):**
+> 
+> The interactive particle face in the hero section is rendered from coordinate & radius data in `frontend/src/data/portrait.ts` (`PORTRAIT: { w, h, d: [[x, y, size], ...] }`).
+> 
+> - **Recommendation:** Rather than plotting dots manually, it is **better and much faster to use Claude (or an AI assistant)**. 
+> - Simply provide a clear, high-contrast portrait photo of yourself and prompt Claude to rasterize/sample it into a dot-matrix array with coordinates and dot radii (`d: [x, y, size]`), matching the format in `frontend/src/data/portrait.ts`. Then copy-paste the generated JSON/TypeScript structure into `portrait.ts`.
 
 > 📄 **`index.html` `<head>` metadata** (title, meta, OpenGraph, Twitter, JSON-LD, Google Analytics) is **generated at build time** from [`src/config/Head.ts`](frontend/src/config/Head.ts) via the `htmlHeadPlugin` in [`vite.config.ts`](frontend/vite.config.ts). You don't edit `index.html` directly — change the values in `Head.ts` (they read from the same `VITE_*` env vars), and the correct tags are injected automatically for both dev and production builds. This guarantees crawlers that don't run JavaScript still see accurate metadata.
 
